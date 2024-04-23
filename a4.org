@@ -1,0 +1,35 @@
+#+title: Epidemic spreading using the SIS model
+
+Monte Carlo simulation of an epidemic spreading dynamics in complex networks, using the SIS model in which each node represents an individual which can be in two possible states: Susceptible (S), i.e., healthy but can get infected; Infected (I), i.e., has the disease and can spread it to its neighbors.
+
+We are interested in the calculation of the fraction of infected nodes, ρ, in the stationary state, as a function of the infection probability of the disease β (at least 51 values between β=0 and β=1, Δβ=0.02), for different values of the recovery probability μ (e.g. 0.1, 0.5, 0.9). Try different undirected networks (e.g., Erdös-Rényi, scale-free, real), different sizes (at least 500 nodes), average degrees, exponents, etc. Do not make all the combinations, about 10 plots ρ(β) are enough.
+
+Optionally (but mandatory if you want to opt to the maximum grade), compare the ρ(β) result from Monte Carlo simulations with the theoretical prediction provided by the Microscopic Markov Chain Approach (MMCA) model.
+
+Epidemic spreading using the SIS model
+
+Monte Carlo simulation of an epidemic spreading dynamics in complex networks, using the SIS model in which each node represents an individual which can be in two possible states: Susceptible (S), i.e., healthy but can get infected; Infected (I), i.e., has the disease and can spread it to its neighbors.
+
+We are interested in the calculation of the fraction of infected nodes, ρ, in the stationary state, as a function of the infection probability of the disease β (at least 51 values between β=0 and β=1, Δβ=0.02), for different values of the recovery probability μ (e.g. 0.1, 0.5, 0.9). Try different undirected networks (e.g., Erdös-Rényi, scale-free, real), different sizes (at least 500 nodes), average degrees, exponents, etc. Do not make all the combinations, about 10 plots ρ(β) are enough.
+
+Optionally (but mandatory if you want to opt to the maximum grade), compare the ρ(β) result from Monte Carlo simulations with the theoretical prediction provided by the Microscopic Markov Chain Approach (MMCA) model.
+
+Monte Carlo simulations may require a lot of computing time, thus it is recommended the use of compiled languages (e.g., Julia, C/C++, C#, Java). In general, and mainly if you are using interpreted languages (e.g., python, Matlab, octave, R), first make tests with small networks, a few time steps, and a few repetitions, before making the definitive simulations.
+
+Observation: in the original paper on MMCA, the modeled SIS dynamic allows for "one-step reinfections", which are not present in our description of the Monte Carlo simulations. Thus, the last term in Eq. (1) of the paper published in Europhys. Lett. must be removed in order that simulation and theoretical model be comparable. For a comparison of dynamics with and without one-step reinfections, please check the paper published in Int. J. Complex Sys. Sci.
+
+* TODO Submit CN
+DEADLINE: <2024-05-03 Fri>
+:PROPERTIES:
+:TODOIST_SYNCED: 7927552451
+:TODOIST_SYNC_TOKEN: YUKLJrlI_9w4m0hDMIIY21HfdRnaNAsQC_5REn1I2P5F5D8q3AanmTqVZPKlCGGsZka7OSf6e1pRxcyeDgMcZ0g7J3a_GMF4oOIiROVjZuZr5g
+:TODOIST_BODY_HASH: b75440cf38b0614be297f42688ee9002
+:END:
+
+The delivery must include:
+- [ ] Source code
+- [ ] Networks used in Pajek format
+- [ ] Results files
+- [ ] Document (in PDF) including:
+        Short explanations on how have you done the required work (software, decisions, etc.)
+        The plots indicated above, pointing out “all” the parameters of the corresponding simulation.
