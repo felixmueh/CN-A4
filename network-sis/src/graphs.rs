@@ -5,6 +5,7 @@ pub trait Graph {
     fn write_to_file(&self, file: &mut std::fs::File) -> std::io::Result<()>;
 }
 
+#[derive(Debug)]
 pub struct GraphAdjacencyList {
     pub nodes: Vec<Vec<usize>>,
 }
@@ -48,6 +49,27 @@ impl Graph for GraphEdgeList {
         writeln!(file, "*Edges")?;
         for (a, b) in &self.edges {
             writeln!(file, "{} {}", a, b)?;
+        }
+        Ok(())
+    }
+}
+
+impl Graph for GraphAdjacencyList {
+    fn n_nodes(&self) -> usize {
+        self.nodes.len()
+    }
+
+    fn write_to_file(&self, file: &mut std::fs::File) -> std::io::Result<()> {
+        // NOTE: Not tested
+        writeln!(file, "*Vertices {}", self.n_nodes())?;
+        for i in 0..self.n_nodes() {
+            writeln!(file, "{} \"{}\"", i, i)?;
+        }
+        writeln!(file, "*Edges")?;
+        for (i, node) in self.nodes.iter().enumerate() {
+            for &j in node {
+                writeln!(file, "{} {}", i, j)?;
+            }
         }
         Ok(())
     }
