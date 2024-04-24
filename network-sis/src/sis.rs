@@ -2,8 +2,8 @@ use crate::{Graph, GraphAdjacencyList};
 use rand::Rng;
 
 #[derive(Debug)]
-pub struct SISGraph {
-    graph: GraphAdjacencyList,
+pub struct SISGraph<'a> {
+    graph: &'a GraphAdjacencyList,
     infected1: Vec<bool>,
     infected2: Vec<bool>,
     first_is_current: bool,
@@ -16,37 +16,54 @@ pub struct SISGraph {
     rng: rand::rngs::ThreadRng,
 }
 
-impl SISGraph {
+impl<'a> SISGraph<'a> {
     pub fn prop_infected(&self) -> f64 {
         self.n_infected as f64 / self.graph.n_nodes() as f64
     }
 
-    pub fn from_graph(graph: GraphAdjacencyList, recovery_rate: f64, infection_rate: f64) -> Self {
+    pub fn reset(&mut self, infection_rate: f64, recovery_rate: f64) {
+        self.recovery_rate = recovery_rate;
+        self.infection_rate = infection_rate;
+        self.n_infected = self.graph.n_nodes();
+        for i in 0..self.graph.n_nodes() {
+            self.infected1[i] = true;
+            self.n_infected_neighbors[i] = 0;
+        }
+
+        // Assuming everyone is infected
+        for i in 0..self.graph.n_nodes() {
+            for j in self.graph.nodes[i].iter() {
+                self.n_infected_neighbors[*j] += 1;
+            }
+        }
+        self.first_is_current = true;
+    }
+
+    pub fn from_graph(
+        graph: &'a GraphAdjacencyList,
+        recovery_rate: f64,
+        infection_rate: f64,
+    ) -> Self {
         let n_nodes = graph.n_nodes();
         let infected1 = vec![true; n_nodes];
         let infected2 = vec![true; n_nodes];
-        let mut n_infected_neighbors = vec![0; n_nodes];
+        let n_infected_neighbors = vec![0; n_nodes];
 
-        for i in 0..n_nodes {
-            for j in graph.nodes[i].iter() {
-                n_infected_neighbors[*j] += 1;
-            }
-        }
-
-        let first_is_current = true;
         let rng = rand::thread_rng();
 
-        Self {
+        let mut g = Self {
             graph,
             infected1,
             infected2,
-            first_is_current,
+            first_is_current: true,
             n_infected_neighbors,
             n_infected: n_nodes,
             recovery_rate,
             infection_rate,
             rng,
-        }
+        };
+        g.reset(infection_rate, recovery_rate);
+        g
     }
 
     pub fn step(&mut self) {
