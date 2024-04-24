@@ -33,3 +33,10 @@ The delivery must include:
 - [ ] Document (in PDF) including:
         Short explanations on how have you done the required work (software, decisions, etc.)
         The plots indicated above, pointing out “all” the parameters of the corresponding simulation.
+
+* SIS
+Compartments = states
+
+*Mark-Newmann : 16.2 Epidemic models on networks*
+- $\beta$ = infection rate: probability of an infected individual infecting a susceptible neighbor in one time step
+  -> probability of not getting infected with n infected neighbors = $(1-\beta)^n$
