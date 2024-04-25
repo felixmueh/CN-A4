@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import multiprocessing
 import numpy as np
+import networkx as nx
 
 sys.path.append('network-gen/')
 from network_gen import *
@@ -59,6 +60,20 @@ def gen_graphs():
     pool.join()
     print("Done generating graphs.")
 
+def validate_graph(graph_path):
+    G = nx.read_pajek(graph_path)
+    G = nx.Graph(G)
+    has_self_loops = False
+    for u, v in G.edges():
+        if u == v:
+            print(f"Graph {graph_path} has self-loops")
+            return False
+    n_components = nx.number_connected_components(G)
+    if n_components != 1:
+        print(f"Graph {graph_path} has {n_components} components")
+        return False
+
+
 def build_rust_lib():
     current_dir = os.getcwd()
     os.chdir(os.path.dirname(os.path.realpath(__file__)) + "/network-sis")
@@ -68,6 +83,24 @@ build_rust_lib()
 
 def run_sis_simulation(in_file, out_file, mu):
     os.system(f"{exec_path} {in_file} {out_file} {mu}")
+
+def validate_graphs():
+    print("Validating graphs...")
+    pool = multiprocessing.Pool()
+    handles = []
+    for sim_task in sim_tasks:
+        for i in range(n_sim):
+            handles.append(
+                pool.apply_async(validate_graph, [get_graph_file_path(sim_task, i)])
+            )
+    pool.close()
+    pool.join()
+    for handle in handles:
+        if not handle.get():
+            print("Validation failed!")
+            return False
+    print("Validation successful!")
+    return True
 
 def sim_graphs():
     pool = multiprocessing.Pool()
@@ -114,10 +147,13 @@ def plot_graphs():
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         gen_graphs()
+        validate_graphs()
         sim_graphs()
         plot_graphs()
     if "gen" in sys.argv:
         gen_graphs()
+    if "validate" in sys.argv:
+        validate_graphs()
     if "sim" in sys.argv:
         sim_graphs()
     if "plot" in sys.argv:
