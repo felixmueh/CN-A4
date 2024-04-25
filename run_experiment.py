@@ -72,6 +72,7 @@ def validate_graph(graph_path):
     if n_components != 1:
         print(f"Graph {graph_path} has {n_components} components")
         return False
+    return True
 
 
 def build_rust_lib():
