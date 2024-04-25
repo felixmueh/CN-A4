@@ -24,8 +24,8 @@ sim_tasks = [
     ("BA", gen_ba_graph, [1000, 1, 10], mus),
     ("ER", gen_er_graph, [1000, 0.1], mus),
     ("WS", gen_ws_graph, [1000, 20, 0.1], mus),
-    ("CM-Poisson", gen_cm_poisson_graph, [1000, 1], mus),
-    ("CM-Powerlaw", gen_cm_powerlaw_graph, [1000, 2.5, 1], mus)
+    ("CM-Poisson", gen_cm_poisson_graph, [1000, 12], mus),
+    ("CM-Powerlaw", gen_cm_powerlaw_graph, [1000, 3, 4], mus)
 ]
 
 def get_name_mu(sim_task, mu):
