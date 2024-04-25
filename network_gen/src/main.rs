@@ -83,10 +83,11 @@ fn main() -> std::io::Result<()> {
         let mut size = None;
         let mut k = None;
         let mut p = None;
+        let mut output = None;
 
         while let Some(arg) = args.next() {
             match arg.as_str() {
-                "-s" => {
+                "-n" => {
                     size = Some(args.next().expect("No size specified").parse().unwrap());
                 }
                 "-k" => {
@@ -95,18 +96,21 @@ fn main() -> std::io::Result<()> {
                 "-p" => {
                     p = Some(args.next().expect("No p specified").parse().unwrap());
                 }
+                "-o" => {
+                    output = Some(args.next().expect("No output file specified"));
+                }
                 _ => {
                     eprintln!("Unknown argument: {}", arg);
                     return Ok(());
                 }
             }
         }
-        if size.is_none() || k.is_none() || p.is_none() {
+        if size.is_none() || k.is_none() || p.is_none() || output.is_none() {
             panic!("Missing arguments");
         }
         let graph = generate_watts_strogatz(size.unwrap(), k.unwrap(), p.unwrap());
         if let Some(graph) = graph {
-            let mut file = File::create("WS_graph.net")?;
+            let mut file = File::create(output.unwrap())?;
             graph.write_to_file(&mut file)?;
         } else {
             panic!("Failed to generate graph");

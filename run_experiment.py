@@ -13,73 +13,87 @@ os.makedirs("graphs", exist_ok=True)
 os.makedirs("results", exist_ok=True)
 os.makedirs("plots", exist_ok=True)
 
+exec_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "network-sis/target/release/sis-sim")
+
 n_sim = 100
 
-def run_sis_simulation(in_file, out_file, mu):
-    current_dir = os.getcwd()
-    os.chdir(os.path.dirname(os.path.realpath(__file__)) + "/network-sis")
-    os.system("cargo build --release")
-    os.chdir(current_dir)
-    exec_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "network-sis/target/release/sis-sim")
-    os.system(f"{exec_path} {in_file} {out_file} {mu}")
+mus = [0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0]
 
+sim_tasks = [
+    ("BA", gen_ba_graph, [1000, 1, 10], mus),
+    ("ER", gen_er_graph, [1000, 0.1], mus),
+    ("WS", gen_ws_graph, [1000, 20, 0.1], mus),
+    ("CM-Poisson", gen_cm_poisson_graph, [1000, 1], mus),
+    ("CM-Powerlaw", gen_cm_powerlaw_graph, [1000, 2.5, 1], mus)
+]
+
+def get_name(sim_task, mu):
+    param_str = "_".join([str(p) for p in sim_task[2]])
+    return f"{sim_task[0]}_{param_str}_mu-{mu}"
+
+def get_graph_file_path(sim_task, i):
+    # without mu
+    param_str = "_".join([str(p) for p in sim_task[2]])
+    return f"graphs/{sim_task[0]}_{param_str}-{i}.net"
+
+def get_result_file_path(sim_task, i, mu):
+    name = get_name(sim_task, mu)
+    return f"results/{name}-{i}.csv"
+
+def get_plot_file_path(sim_task, mu):
+    name = get_name(sim_task, mu)
+    return f"plots/{name}.png"
 
 def gen_graphs():
     # generate graphs
     print("Generating graphs...")
     pool = multiprocessing.Pool()
     for i in range(n_sim):
-        # gen_ba_graph(1000, 1, 10, "graphs/BA_graph_10000_1_10.net")
-        # gen_er_graph(1000, 0.1, "graphs/ER_graph_10000_0.1.net")
-        # gen_ws_graph(1000, 20, 0.1, "graphs/WS_graph_10000_20_0.1.net")
-        # # prepend .. to filepath (not clean but it works)
-        # gen_cm_poisson_graph(1000, 1, "../graphs/CM_Poisson_graph_10000_1.net")
-        # gen_cm_powerlaw_graph(1000, 2.5, 1, "../graphs/CM_Powerlaw_graph_10000_2.5_1.net")
-        pool.apply_async(gen_ba_graph, (1000, 1, 10, f"graphs/BA_graph_1000_1_10-{i}.net"))
-        pool.apply_async(gen_er_graph, (1000, 0.1, f"graphs/ER_graph_1000_0.1-{i}.net"))
-        pool.apply_async(gen_ws_graph, (1000, 20, 0.1, f"graphs/WS_graph_1000_20_0.1-{i}.net"))
-        pool.apply_async(gen_cm_poisson_graph, (1000, 1, f"graphs/CM_Poisson_graph_1000_1-{i}.net"))
-        pool.apply_async(gen_cm_powerlaw_graph, (1000, 2.5, 1, f"graphs/CM_Powerlaw_graph_1000_2.5_1-{i}.net"))
+        for sim_task in sim_tasks:
+            print(f"Generating {get_graph_file_path(sim_task, i)} ...")
+            pool.apply_async(sim_task[1], sim_task[2] + [get_graph_file_path(sim_task, i)])
     pool.close()
     pool.join()
     print("Done generating graphs.")
 
-simulation_queue = []
-for i in range(n_sim):
-    simulation_queue.append((f"graphs/BA_graph_1000_1_10-{i}.net",  f"results/BA_graph_1000_1_10-{i}", 0.1))
-    simulation_queue.append((f"graphs/ER_graph_1000_0.1-{i}.net", f"results/ER_graph_1000_0.1-{i}", 0.1))
-    simulation_queue.append((f"graphs/CM_Poisson_graph_1000_1-{i}.net", f"results/CM_Poisson_graph_1000_1-{i}", 0.1))
-    simulation_queue.append((f"graphs/CM_Powerlaw_graph_1000_2.5_1-{i}.net", f"results/CM_Powerlaw_graph_1000_2.5_1-{i}", 0.1))
+def build_rust_lib():
+    current_dir = os.getcwd()
+    os.chdir(os.path.dirname(os.path.realpath(__file__)) + "/network-sis")
+    os.system("cargo build --release")
+    os.chdir(current_dir)
+build_rust_lib()
+
+def run_sis_simulation(in_file, out_file, mu):
+    os.system(f"{exec_path} {in_file} {out_file} {mu}")
 
 def sim_graphs():
     pool = multiprocessing.Pool()
-    pool.starmap(run_sis_simulation, simulation_queue)
+    for sim_task in sim_tasks:
+        for mu in sim_task[3]:
+            for i in range(n_sim):
+                pool.apply_async(run_sis_simulation, [get_graph_file_path(sim_task, i), get_result_file_path(sim_task, i, mu), mu])
     pool.close()
     pool.join()
 
 def plot_graphs():
-    base_results = [
-        "results/BA_graph_1000_1_10",
-        "results/ER_graph_1000_0.1",
-        "results/CM_Poisson_graph_1000_1",
-        "results/CM_Powerlaw_graph_1000_2.5_1"
-    ]
-    for base_result in base_results:
-        results = []
-        for i in range(n_sim):
-            result_file = f"{base_result}-{i}"
-            with open(result_file, 'r') as f:
-                lines = f.readlines()
-                x = [float(line.split(",")[0]) for line in lines]
-                y = [float(line.split(",")[1]) for line in lines]
-                results.append((x, y))
-        mean = np.mean([y for x, y in results], axis=0)
-        std = np.std([y for x, y in results], axis=0)
-        plt.plot(x, mean, label="Mean")
-        plt.fill_between(x, mean-std, mean+std, alpha=0.5)
-        plt.title(base_result.replace("results/", "") + " Mean over {} simulations".format(n_sim))
-        plt.savefig(base_result.replace("results", "plots") + f"-mean-{n_sim}.png")
-        plt.close()
+    for sim_task in sim_tasks:
+        for mu in sim_task[3]:
+            results = []
+            for i in range(n_sim):
+                result_file = get_result_file_path(sim_task, i, mu)
+                with open(result_file, 'r') as f:
+                    lines = f.readlines()
+                    x = [float(line.split(",")[0]) for line in lines]
+                    y = [float(line.split(",")[1]) for line in lines]
+                    results.append((x, y))
+            mean = np.mean([y for x, y in results], axis=0)
+            std = np.std([y for x, y in results], axis=0)
+            plt.plot(x, mean, label="Mean")
+            plt.fill_between(x, mean-std, mean+std, alpha=0.5)
+            plot_file = get_plot_file_path(sim_task, mu)
+            plt.title(get_name(sim_task, mu) + " Mean over {} simulations".format(n_sim))
+            plt.savefig(get_plot_file_path(sim_task, mu) + f"-mean-{n_sim}.png")
+            plt.close()
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

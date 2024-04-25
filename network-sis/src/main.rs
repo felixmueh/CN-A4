@@ -4,6 +4,8 @@ use std::io::Write;
 use sis_sim::GraphEdgeList;
 use sis_sim::SISGraph;
 
+const VERBOSE: bool = false;
+
 fn main() {
     let n_beta = 51;
     let beta_min = 0.0;
@@ -35,10 +37,12 @@ fn main() {
             g.step();
             let prop = g.prop_infected();
             if (prop - prev).abs() < eps {
-                println!(
-                    "Converged in {} steps to {}, for mu={}, beta={}",
-                    i, prop, mu, beta
-                );
+                if VERBOSE {
+                    println!(
+                        "Converged in {} steps to {}, for mu={}, beta={}",
+                        i, prop, mu, beta
+                    );
+                }
                 break;
             }
             prev = prop;
