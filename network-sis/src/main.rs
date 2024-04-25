@@ -20,8 +20,13 @@ fn main() {
     // TODO: check components (should be one)
     let g = GraphEdgeList::read_pajek(&mut file).unwrap().into();
 
-    let eps = 1e-10;
-    let max_sim = 10000;
+    // this eps is for an early stop when convergence
+    let eps = 0.001;
+    // maximume allowed occilation if not converged
+    let eps_panic = 0.10;
+    let max_sim = 5000;
+    let mut cnt_no_change = 0;
+    let cnt_required = 3;
     let mut g = SISGraph::from_graph(&g, 0.0, 0.0);
 
     let mut results = Vec::new();
@@ -31,12 +36,26 @@ fn main() {
 
         let mut prev = g.prop_infected();
         for i in 0.. {
-            if i >= max_sim {
-                panic!("Max sim reached");
-            }
             g.step();
             let prop = g.prop_infected();
+            let delta = (prop - prev).abs();
+            if i >= max_sim {
+                if delta > eps_panic {
+                    panic!(
+                        "Max sim reached and not converged for {}, mu={}, delta={}",
+                        in_file,
+                        mu,
+                        (prop - prev).abs()
+                    );
+                }
+                break;
+            }
             if (prop - prev).abs() < eps {
+                cnt_no_change += 1;
+            } else {
+                cnt_no_change = 0;
+            }
+            if cnt_no_change >= cnt_required {
                 if VERBOSE {
                     println!(
                         "Converged in {} steps to {}, for mu={}, beta={}",

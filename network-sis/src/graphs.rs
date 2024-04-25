@@ -89,6 +89,9 @@ impl From<GraphAdjacencyList> for GraphEdgeList {
 
 impl From<GraphEdgeList> for GraphAdjacencyList {
     fn from(val: GraphEdgeList) -> Self {
+        if val.edges.is_empty() {
+            return GraphAdjacencyList { nodes: Vec::new() };
+        }
         let max_node = val.edges.iter().map(|(a, b)| *a.max(b)).max().unwrap();
         let mut nodes = vec![Vec::new(); max_node + 1];
         for (a, b) in val.edges {

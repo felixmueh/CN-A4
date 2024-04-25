@@ -16,14 +16,22 @@ os.makedirs("plots", exist_ok=True)
 
 exec_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "network-sis/target/release/sis-sim")
 
-n_sim = 5000
+n_sim = 100
 
-mus = [0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0]
+mus = [0.1, 0.3, 0.5, 0.7, 0.9]
 
 sim_tasks = [
-    ("BA", gen_ba_graph, [1000, 1, 10], mus),
+    ("BA", gen_ba_graph, [1000, 3, 10], mus),
+    ("BA", gen_ba_graph, [1000, 6, 10], mus),
+    ("BA", gen_ba_graph, [1000, 10, 15], mus),
     ("ER", gen_er_graph, [1000, 0.1], mus),
     ("WS", gen_ws_graph, [1000, 20, 0.1], mus),
+    ("WS", gen_ws_graph, [1000, 10, 0.1], mus),
+    ("WS", gen_ws_graph, [1000, 40, 0.1], mus),
+    ("ER", gen_er_graph, [1000, 0.3], mus),
+    ("WS", gen_ws_graph, [1000, 20, 0.3], mus),
+    ("ER", gen_er_graph, [1000, 0.02], mus),
+    ("WS", gen_ws_graph, [1000, 20, 0.02], mus),
     ("CM-Poisson", gen_cm_poisson_graph, [1000, 12], mus),
     ("CM-Powerlaw", gen_cm_powerlaw_graph, [1000, 3, 4], mus)
 ]
@@ -54,8 +62,10 @@ def gen_graphs():
     pool = multiprocessing.Pool()
     for i in range(n_sim):
         for sim_task in sim_tasks:
-            print(f"Generating {get_graph_file_path(sim_task, i)} ...")
-            pool.apply_async(sim_task[1], sim_task[2] + [get_graph_file_path(sim_task, i)])
+            def callback(_, i=i, sim_task=sim_task[0]):
+                print(f"{sim_task}: {i/n_sim * 100}%")
+            pool.apply_async(sim_task[1], sim_task[2] + [get_graph_file_path(sim_task, i)],
+                             callback=callback)
     pool.close()
     pool.join()
     print("Done generating graphs.")
@@ -71,6 +81,10 @@ def validate_graph(graph_path):
     n_components = nx.number_connected_components(G)
     if n_components != 1:
         print(f"Graph {graph_path} has {n_components} components")
+        return False
+    n_edges = G.number_of_edges()
+    if n_edges < 100:
+        print(f"Graph {graph_path} has less than 100 edges")
         return False
     return True
 
@@ -104,6 +118,7 @@ def validate_graphs():
     return True
 
 def sim_graphs():
+    print("Running simulations...")
     pool = multiprocessing.Pool()
     for sim_task in sim_tasks:
         for mu in sim_task[3]:
@@ -119,28 +134,35 @@ def plot_graphs():
             results = []
             for i in range(n_sim):
                 result_file = get_result_file_path(sim_task, i, mu)
-                with open(result_file, 'r') as f:
-                    lines = f.readlines()
-                    x = [float(line.split(",")[0]) for line in lines]
-                    y = [float(line.split(",")[1]) for line in lines]
-                    results.append((x, y))
+                try:
+                    with open(result_file, 'r') as f:
+                        lines = f.readlines()
+                        x = [float(line.split(",")[0]) for line in lines]
+                        y = [float(line.split(",")[1]) for line in lines]
+                        results.append((x, y))
+                except FileNotFoundError:
+                    pass
             mean = np.mean([y for x, y in results], axis=0)
             std = np.std([y for x, y in results], axis=0)
             results_mu.append((mu, mean, std))
             fig, ax = plt.subplots()
-            ax.plot(x, mean, label="Mean")
+            ax.plot(x, mean, label="Mean", marker="o", markersize=2)
             ax.fill_between(x, mean-std, mean+std, alpha=0.5)
             plot_title = get_name_mu(sim_task, mu) + f" Mean over {n_sim} simulations\nShaded area is the standard deviation"
             ax.set_title(plot_title)
+            ax.set_xlabel("β")
+            ax.set_ylabel("ρ")
             fig.savefig(get_plot_file_path(sim_task, mu) + f"-mean-{n_sim}.png")
             plt.close(fig)
         fig, ax = plt.subplots()
         for mu, mean, std in results_mu:
-            ax.plot(x, mean, label=f"Mu={mu}")
+            ax.plot(x, mean, label=f"Mu={mu}", marker="o", markersize=2)
             # ax.fill_between(x, mean-std, mean+std, alpha=0.5)
         plot_title = get_name(sim_task) + f" Mean over {n_sim} simulations."
         ax.set_title(plot_title)
         ax.legend()
+        ax.set_xlabel("β")
+        ax.set_ylabel("ρ")
         fig.savefig(get_plot_file_path(sim_task, "all") + f"-mean-{n_sim}.png")
         plt.close(fig)
 
