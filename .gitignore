@@ -20,5 +20,5 @@ Cargo.lock
 
 .venv
 /graphs/
-/plots/
+/results/
 /distributions/
