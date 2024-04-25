@@ -20,8 +20,10 @@ def run_rust_lib(*args):
     # cd to this file's directory
     current_dir = os.getcwd()
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
-    os.system("cargo run --release -- " + " ".join(args))
+    os.system("cargo build --release")
     os.chdir(current_dir)
+    exec_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "target/release/network-gen")
+    os.system(f"{exec_path} {' '.join(args)}")
 
 def gen_ba_graph(n, m, m_0, filepath):
     g = ba.barabasi_albert(n, m, m_0)

@@ -14,7 +14,7 @@ fn main() {
     let out_file = &args[2];
     let mu = args[3].parse::<f64>().unwrap();
 
-    let mut file = File::open(in_file).expect("Failed to open file");
+    let mut file = File::open(in_file).expect(format!("Failed to open file {}", in_file).as_str());
     // TODO: check components (should be one)
     let g = GraphEdgeList::read_pajek(&mut file).unwrap().into();
 
