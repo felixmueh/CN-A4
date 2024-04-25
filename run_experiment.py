@@ -15,7 +15,7 @@ os.makedirs("plots", exist_ok=True)
 
 exec_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "network-sis/target/release/sis-sim")
 
-n_sim = 100
+n_sim = 5000
 
 mus = [0.1, 0.2, 0.3, 0.4, 0.5, 0.8, 1.0]
 
@@ -27,9 +27,12 @@ sim_tasks = [
     ("CM-Powerlaw", gen_cm_powerlaw_graph, [1000, 2.5, 1], mus)
 ]
 
-def get_name(sim_task, mu):
+def get_name_mu(sim_task, mu):
+    return get_name(sim_task) + f"_mu-{mu}"
+
+def get_name(sim_task):
     param_str = "_".join([str(p) for p in sim_task[2]])
-    return f"{sim_task[0]}_{param_str}_mu-{mu}"
+    return f"{sim_task[0]}_{param_str}"
 
 def get_graph_file_path(sim_task, i):
     # without mu
@@ -37,11 +40,11 @@ def get_graph_file_path(sim_task, i):
     return f"graphs/{sim_task[0]}_{param_str}-{i}.net"
 
 def get_result_file_path(sim_task, i, mu):
-    name = get_name(sim_task, mu)
+    name = get_name_mu(sim_task, mu)
     return f"results/{name}-{i}.csv"
 
 def get_plot_file_path(sim_task, mu):
-    name = get_name(sim_task, mu)
+    name = get_name_mu(sim_task, mu)
     return f"plots/{name}.png"
 
 def gen_graphs():
@@ -77,6 +80,7 @@ def sim_graphs():
 
 def plot_graphs():
     for sim_task in sim_tasks:
+        results_mu = []
         for mu in sim_task[3]:
             results = []
             for i in range(n_sim):
@@ -88,12 +92,24 @@ def plot_graphs():
                     results.append((x, y))
             mean = np.mean([y for x, y in results], axis=0)
             std = np.std([y for x, y in results], axis=0)
-            plt.plot(x, mean, label="Mean")
-            plt.fill_between(x, mean-std, mean+std, alpha=0.5)
-            plot_file = get_plot_file_path(sim_task, mu)
-            plt.title(get_name(sim_task, mu) + " Mean over {} simulations".format(n_sim))
-            plt.savefig(get_plot_file_path(sim_task, mu) + f"-mean-{n_sim}.png")
-            plt.close()
+            results_mu.append((mu, mean, std))
+            fig, ax = plt.subplots()
+            ax.plot(x, mean, label="Mean")
+            ax.fill_between(x, mean-std, mean+std, alpha=0.5)
+            plot_title = get_name_mu(sim_task, mu) + f" Mean over {n_sim} simulations\nShaded area is the standard deviation"
+            ax.set_title(plot_title)
+            fig.savefig(get_plot_file_path(sim_task, mu) + f"-mean-{n_sim}.png")
+            plt.close(fig)
+        fig, ax = plt.subplots()
+        for mu, mean, std in results_mu:
+            ax.plot(x, mean, label=f"Mu={mu}")
+            # ax.fill_between(x, mean-std, mean+std, alpha=0.5)
+        plot_title = get_name(sim_task) + f" Mean over {n_sim} simulations."
+        ax.set_title(plot_title)
+        ax.legend()
+        fig.savefig(get_plot_file_path(sim_task, "all") + f"-mean-{n_sim}.png")
+        plt.close(fig)
+
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
