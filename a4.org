@@ -33,6 +33,7 @@ The delivery must include:
 - [ ] Document (in PDF) including:
         Short explanations on how have you done the required work (software, decisions, etc.)
         The plots indicated above, pointing out “all” the parameters of the corresponding simulation.
+- [ ] 20% infection rate
 
 * SIS
 Compartments = states

@@ -17,6 +17,14 @@ pub struct SISGraph<'a> {
 }
 
 impl<'a> SISGraph<'a> {
+    pub fn n_infected(&self) -> usize {
+        self.n_infected
+    }
+
+    pub fn n_nodes(&self) -> usize {
+        self.graph.n_nodes()
+    }
+
     pub fn prop_infected(&self) -> f64 {
         self.n_infected as f64 / self.graph.n_nodes() as f64
     }
@@ -24,16 +32,20 @@ impl<'a> SISGraph<'a> {
     pub fn reset(&mut self, infection_rate: f64, recovery_rate: f64) {
         self.recovery_rate = recovery_rate;
         self.infection_rate = infection_rate;
-        self.n_infected = self.graph.n_nodes();
+        self.n_infected = 0;
         for i in 0..self.graph.n_nodes() {
-            self.infected1[i] = true;
+            self.infected1[i] = self.rng.gen::<f64>() < 0.2;
+            if self.infected1[i] {
+                self.n_infected += 1;
+            }
             self.n_infected_neighbors[i] = 0;
         }
 
-        // Assuming everyone is infected
         for i in 0..self.graph.n_nodes() {
-            for j in self.graph.nodes[i].iter() {
-                self.n_infected_neighbors[*j] += 1;
+            if self.infected1[i] {
+                for j in self.graph.nodes[i].iter() {
+                    self.n_infected_neighbors[*j] += 1;
+                }
             }
         }
         self.first_is_current = true;

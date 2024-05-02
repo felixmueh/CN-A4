@@ -12,6 +12,7 @@ pub struct GraphAdjacencyList {
 
 #[derive(Debug)]
 pub struct GraphEdgeList {
+    // undirected graph
     pub edges: Vec<(usize, usize)>,
 }
 
@@ -96,6 +97,7 @@ impl From<GraphEdgeList> for GraphAdjacencyList {
         let mut nodes = vec![Vec::new(); max_node + 1];
         for (a, b) in val.edges {
             nodes[a].push(b);
+            nodes[b].push(a);
         }
         GraphAdjacencyList { nodes }
     }

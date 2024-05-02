@@ -16,7 +16,7 @@ os.makedirs("plots", exist_ok=True)
 
 exec_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), "network-sis/target/release/sis-sim")
 
-n_sim = 100
+n_sim = 250
 
 mus = [0.1, 0.3, 0.5, 0.7, 0.9]
 
@@ -25,14 +25,16 @@ sim_tasks = [
     ("BA", gen_ba_graph, [1000, 6, 10], mus),
     ("BA", gen_ba_graph, [1000, 10, 15], mus),
     ("ER", gen_er_graph, [1000, 0.1], mus),
+    ("ER", gen_er_graph, [1000, 0.9], mus),
     ("WS", gen_ws_graph, [1000, 20, 0.1], mus),
     ("WS", gen_ws_graph, [1000, 10, 0.1], mus),
     ("WS", gen_ws_graph, [1000, 40, 0.1], mus),
     ("ER", gen_er_graph, [1000, 0.3], mus),
     ("WS", gen_ws_graph, [1000, 20, 0.3], mus),
     ("ER", gen_er_graph, [1000, 0.02], mus),
+    ("ER", gen_er_graph, [1000, 0.5], mus),
     ("WS", gen_ws_graph, [1000, 20, 0.02], mus),
-    ("CM-Poisson", gen_cm_poisson_graph, [1000, 12], mus),
+    ("CM-Poisson", gen_cm_poisson_graph, [1000, 20], mus),
     ("CM-Powerlaw", gen_cm_powerlaw_graph, [1000, 3, 4], mus)
 ]
 
@@ -97,7 +99,7 @@ def build_rust_lib():
 build_rust_lib()
 
 def run_sis_simulation(in_file, out_file, mu):
-    os.system(f"{exec_path} {in_file} {out_file} {mu}")
+    os.system(f"{exec_path} beta {in_file} {out_file} {mu}")
 
 def validate_graphs():
     print("Validating graphs...")
