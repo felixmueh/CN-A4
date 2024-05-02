@@ -188,13 +188,18 @@ def plot_graphs():
             fig.savefig(get_plot_file_path(sim_task, mu) + f"-mean-{n_sim}.png")
             plt.close(fig)
         fig, ax = plt.subplots()
-        ros = pickle.load(open(f"results/theoretical_{get_name(sim_task)}.pkl", "rb"))
+        try:
+            ros = pickle.load(open(f"results/theoretical_{get_name(sim_task)}.pkl", "rb"))
+        except FileNotFoundError:
+            print("could not load theoretical")
+            ros = None
 
         colors = [(0, 0, 1, 0.8), (1, 0.7, 0, 0.8), (0, 0.8, 0, 0.8), (1, 0, 0, 0.8), (0.5, 0, 0.5, 0.8)]
 
         for (mu, mean, std), color in zip(results_mu, colors):
             ax.plot(x, mean, label=f"μ={mu}", marker="o", markersize=5, linestyle='', color=color)
-            ax.plot(np.arange(0, 1.02, 0.02), ros[sim_task[3].index(mu)], label=f"Theoretical μ={mu}", linestyle="-", color=color)
+            if ros is not None:
+                ax.plot(np.arange(0, 1.02, 0.02), ros[sim_task[3].index(mu)], label=f"Theoretical μ={mu}", linestyle="-", color=color)
 
 
         plot_title = get_name(sim_task) + f" Mean over {n_sim} simulations."
