@@ -59,7 +59,7 @@ def get_result_file_path(sim_task, i, mu):
 
 def get_plot_file_path(sim_task, mu):
     name = get_name_mu(sim_task, mu)
-    return f"plots/{name}.png"
+    return f"plots/{name}"
 
 def gen_graphs():
     # generate graphs
@@ -138,7 +138,7 @@ def sim_theoretical():
     for sim_task in sim_tasks:
         ros = []
         name = get_name(sim_task)
-        for mu in tqdm(name, desc=f"Simulating {sim_task[0]}"):
+        for mu in tqdm(mus, desc=f"Simulating {name}"):
             G = nx.read_pajek(get_graph_file_path(sim_task, 0))
             G = nx.Graph(G)
             ro = [mmca(G, beta, mu) for beta in betas]
@@ -157,7 +157,7 @@ def plot_theoretical():
         plt.ylabel('ρ')
         plt.title('theoretical MMCA values for {}'.format(get_name(sim_task)))
         plt.legend()
-        plt.savefig(f'plots/theoretical_{get_name(sim_task)}_test.png')
+        plt.savefig(f'plots/theoretical_{get_name(sim_task)}.png')
         plt.close()
 
 def plot_graphs():
@@ -188,26 +188,21 @@ def plot_graphs():
             fig.savefig(get_plot_file_path(sim_task, mu) + f"-mean-{n_sim}.png")
             plt.close(fig)
         fig, ax = plt.subplots()
-        try:
-            ros = pickle.load(open(f"results/theoretical_{get_name(sim_task)}.pkl", "rb"))
-        except FileNotFoundError:
-            print("could not load theoretical")
-            ros = None
+        ros = pickle.load(open(f"results/theoretical_{get_name(sim_task)}.pkl", "rb"))
 
         colors = [(0, 0, 1, 0.8), (1, 0.7, 0, 0.8), (0, 0.8, 0, 0.8), (1, 0, 0, 0.8), (0.5, 0, 0.5, 0.8)]
 
         for (mu, mean, std), color in zip(results_mu, colors):
             ax.plot(x, mean, label=f"μ={mu}", marker="o", markersize=5, linestyle='', color=color)
-            if ros is not None:
-                ax.plot(np.arange(0, 1.02, 0.02), ros[sim_task[3].index(mu)], label=f"Theoretical μ={mu}", linestyle="-", color=color)
+            ax.plot(np.arange(0, 1.02, 0.02), ros[sim_task[3].index(mu)], label=f"Theoretical μ={mu}", linestyle="-", color=color)
 
 
         plot_title = get_name(sim_task) + f" Mean over {n_sim} simulations."
         ax.set_title(plot_title)
-        ax.legend(prop={'size': 8})  # Set legend font size to 8
+        ax.legend(prop={'size': 8})  
         ax.set_xlabel("β")
         ax.set_ylabel("ρ")
-        ax.grid(True)  # Add grid
+        ax.grid(True)  
         fig.savefig(get_plot_file_path(sim_task, "all") + f"-mean-{n_sim}.png")
         plt.close(fig)
 
@@ -218,7 +213,7 @@ if __name__ == "__main__":
         validate_graphs()
         sim_graphs()
         sim_theoretical()
-        #plot_theoretical()
+        plot_theoretical()
         plot_graphs()
 
     if "gen" in sys.argv:
